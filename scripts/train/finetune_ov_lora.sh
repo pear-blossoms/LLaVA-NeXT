@@ -1,0 +1,47 @@
+#!/bin/bash
+
+deepspeed --include localhost:0,1,2,3 llava/train/train_mem.py \
+    --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+    --deepspeed ./scripts/zero3.json \
+    --model_name_or_path /l/users/panwen.hu/haokun.lin/checkpoints/llava-onevision-qwen2-7b-si \
+    --version qwen_1_5 \
+    --data_path /home/panwen.hu/workspace/haokun.lin/data/train_si/train_si_300k.yaml \
+    --image_folder '' \
+    --video_folder /home/panwen.hu/workspace/haokun.lin/data/sharegpt300k/train_300k \
+    --mm_tunable_parts="mm_vision_tower,mm_mlp_adapter,mm_language_model" \
+    --mm_vision_tower_lr=2e-6 \
+    --vision_tower openai/clip-vit-large-patch14-336 \
+    --mm_projector_type mlp2x_gelu \
+    --mm_vision_select_layer -2 \
+    --mm_use_im_start_end False \
+    --mm_use_im_patch_token False \
+    --group_by_modality_length True \
+    --image_aspect_ratio anyres_max_9 \
+    --image_grid_pinpoints  "(1x1),...,(6x6)" \
+    --mm_patch_merge_type spatial_unpad \
+    --bf16 True \
+    --run_name llava-onevision-qwen2-7b-si_lora \
+    --output_dir /home/panwen.hu/workspace/haokun.lin/checkpoints/llava-onevision-qwen2-7b-si_lora \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size 1 \
+    --per_device_eval_batch_size 4 \
+    --gradient_accumulation_steps 2 \
+    --evaluation_strategy "no" \
+    --save_strategy "steps" \
+    --save_steps 1000 \
+    --save_total_limit 1 \
+    --learning_rate 1e-5 \
+    --weight_decay 0. \
+    --warmup_ratio 0.03 \
+    --lr_scheduler_type "cosine" \
+    --logging_steps 1 \
+    --tf32 True \
+    --model_max_length 32768 \
+    --gradient_checkpointing True \
+    --dataloader_num_workers 4 \
+    --lazy_preprocess True \
+    --report_to wandb \
+    --torch_compile True \
+    --torch_compile_backend "inductor" \
+    --dataloader_drop_last True \
+    --frames_upbound 32
